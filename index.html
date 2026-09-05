@@ -1,97 +1,63 @@
-<!doctype html>
-<html lang="id">
-<head>
+<!doctype html><html lang="id"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#6750A4"><link rel="manifest" href="manifest.json">
-<title>Amazon Content Tool V3</title>
+<meta name="theme-color" content="#111827"><link rel="manifest" href="manifest.json">
+<title>Amazon ASIN Filter V4</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:#f7f5fa;color:#222}
-main{max-width:820px;margin:auto;padding:16px}.card{background:#fff;border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 2px 10px #0001}
-h1{font-size:25px;margin:4px 0}h3{margin-top:0}.muted{color:#666;font-size:14px}
-textarea,input{width:100%;padding:13px;border:1px solid #ccc;border-radius:12px;font:inherit;margin-top:7px}
-textarea{min-height:150px}button{border:0;border-radius:12px;padding:13px 16px;margin:7px 5px 0 0;font-weight:700;background:#6750A4;color:white}
-button.secondary{background:#eee;color:#333}.item{border-top:1px solid #eee;padding:14px 0}.tag{display:inline-block;background:#eee;border-radius:8px;padding:4px 8px;font-size:12px}
-pre{white-space:pre-wrap;word-break:break-word;background:#f5f5f5;padding:12px;border-radius:10px;font-size:12px}
-.success{color:#26734d;font-weight:600}.small{font-size:12px;color:#777;margin-top:7px}
-table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}
-.badge{display:inline-block;padding:3px 7px;border-radius:8px;background:#eee;font-size:11px}.url{word-break:break-all}
-</style></head>
-<body><main>
-<div class="card"><h1>Amazon Content Tool</h1><div class="muted">Prototype V3 • banyak URL/ASIN → ekstrak ASIN → affiliate link → HTML Blogger</div></div>
-
-<div class="card"><h3>⚙️ Affiliate</h3>
-<label>Amazon Marketplace</label><input value="🇩🇪 Amazon.de" disabled>
-<label>Associate / Tracking ID</label><input id="tag" placeholder="contoh: namamu-21">
-<div class="small">Tracking ID disimpan hanya di browser perangkat ini.</div>
-<button onclick="saveTag()">SIMPAN TRACKING ID</button><div id="tagStatus"></div></div>
-
-<div class="card"><h3>1. Masukkan URL Amazon atau ASIN</h3>
-<div class="muted">Paste banyak data sekaligus. Bisa satu URL/ASIN per baris, atau teks campuran yang mengandung URL Amazon/ASIN.</div>
-<textarea id="input" placeholder="Contoh:
-https://www.amazon.de/dp/B0XXXXXXXX
-B0YYYYYYYY
-https://www.amazon.de/gp/product/B0ZZZZZZZZ"></textarea>
-<button onclick="extract()">🔎 EKSTRAK ASIN</button><button class="secondary" onclick="clearAll()">RESET</button>
-<div id="count" class="muted" style="margin-top:10px">Belum ada ASIN.</div></div>
-
-<div class="card"><h3>2. Hasil</h3>
-<div id="products"><div class="muted">Masukkan data terlebih dahulu.</div></div>
-<button onclick="generate()">GENERATE HTML BLOGGER</button>
-<button class="secondary" onclick="copyCsv()">COPY CSV</button>
-</div>
-
-<div class="card"><h3>3. HTML Blogger</h3>
-<div class="muted">V3 membuat link affiliate dan template HTML. Data harga/deskripsi produk belum diambil otomatis dari Amazon.</div>
-<button onclick="copyHtml()">COPY HTML</button><button class="secondary" onclick="downloadHtml()">DOWNLOAD HTML</button>
-<pre id="preview">Belum ada hasil.</pre></div>
+body{font-family:system-ui,sans-serif;background:#f3f4f6;color:#111827;margin:0}main{max-width:900px;margin:auto;padding:16px}
+.card{background:#fff;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 2px 10px #0001}
+h1{font-size:24px;margin:4px 0}.muted,.small{color:#6b7280;font-size:14px}
+textarea,input{width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:12px;padding:12px;font-size:15px;margin-top:8px}
+textarea{min-height:220px}button{border:0;border-radius:12px;padding:11px 14px;margin:8px 6px 0 0;font-weight:700;background:#111827;color:#fff}
+button.secondary{background:#e5e7eb;color:#111827}.row{display:flex;gap:8px;flex-wrap:wrap}
+.stat{display:inline-block;background:#f3f4f6;padding:8px 12px;border-radius:10px;margin:5px}
+table{width:100%;border-collapse:collapse;margin-top:12px;font-size:14px}th,td{text-align:left;border-bottom:1px solid #e5e7eb;padding:9px 6px}
+.ok{color:#047857;font-weight:700}.warn{color:#b45309;font-weight:700}
+</style></head><body><main>
+<div class="card"><h1>🔎 Amazon ASIN Filter V4</h1>
+<div class="muted">Copy seluruh teks/HTML dari satu halaman, paste sekali, lalu saring ASIN unik.</div></div>
+<div class="card"><h3>1. Tempel isi halaman</h3>
+<textarea id="source" placeholder="Paste teks atau HTML di sini..."></textarea>
+<div class="row"><button onclick="extractASINs()">🔎 Ekstrak ASIN</button><button class="secondary" onclick="clearAll()">🗑️ Bersihkan</button></div>
+<p class="small">Membaca URL /dp/ASIN, /gp/product/ASIN, data-asin, label ASIN, dan ASIN modern yang diawali B0.</p></div>
+<div class="card"><h3>2. Hasil</h3><div id="stats"></div>
+<textarea id="result" placeholder="ASIN unik akan muncul di sini..." readonly></textarea>
+<div class="row"><button onclick="copyASINs()">📋 Copy ASIN</button><button onclick="copyLinks()">🔗 Copy Affiliate Links</button><button onclick="downloadCSV()">⬇️ Download CSV</button></div></div>
+<div class="card"><h3>3. Affiliate Amazon.de</h3><label>Tracking ID</label>
+<input id="tag" placeholder="contoh: namamu-21"><button onclick="saveTag()">💾 Simpan</button>
+<div id="linkPreview" class="small" style="margin-top:10px"></div></div>
+<div class="card"><h3>Daftar terdeteksi</h3><div id="tableWrap" class="muted">Belum ada hasil.</div></div>
 </main>
 <script>
-let data=[];
-const $=id=>document.getElementById(id);
-function load(){let t=localStorage.getItem('amazonTag')||'';$('tag').value=t;if(t)$('tagStatus').innerHTML='<span class="success">✓ Tracking ID tersimpan</span>'}
-function saveTag(){let t=$('tag').value.trim();if(!t){alert('Masukkan Tracking ID terlebih dahulu.');return}localStorage.setItem('amazonTag',t);$('tagStatus').innerHTML='<span class="success">✓ Tracking ID tersimpan</span>';alert('Tracking ID disimpan.')}
-function extract(){
- const text=$('input').value;
- const found=[];
- const asinRe=/\b[A-Z0-9]{10}\b/gi;
- let m;
- while((m=asinRe.exec(text))!==null) found.push(m[0].toUpperCase());
- data=[...new Set(found)];
- $('count').textContent=data.length+' ASIN unik ditemukan.';
- render();
+const tagEl=document.getElementById('tag');tagEl.value=localStorage.getItem('amazonTagV4')||'';
+function norm(s){return s.toUpperCase().trim()}
+function extractASINs(){
+ const text=document.getElementById('source').value||'',found=[]; const add=x=>{x=norm(x);if(/^[A-Z0-9]{10}$/.test(x)&&!found.includes(x))found.push(x)};
+ const rs=[
+ /(?:amazon\.[a-z.]+)\/.*?\/dp\/([A-Z0-9]{10})(?=[\/?#\s"'<>]|$)/gi,
+ /(?:amazon\.[a-z.]+)\/.*?\/gp\/product\/([A-Z0-9]{10})(?=[\/?#\s"'<>]|$)/gi,
+ /(?:amazon\.[a-z.]+)\/.*?\/gp\/aw\/d\/([A-Z0-9]{10})(?=[\/?#\s"'<>]|$)/gi,
+ /(?:amazon\.[a-z.]+)\/.*?[?&](?:asin|ASIN)=([A-Z0-9]{10})(?:[&#\s"'<>]|$)/gi,
+ /(?:data-asin|data-asin-id|asin)\s*=\s*["']([A-Z0-9]{10})["']/gi,
+ /\bASIN\s*[:#=\-]?\s*([A-Z0-9]{10})\b/gi
+ ];
+ for(const re of rs){let m;while((m=re.exec(text))!==null)add(m[1])}
+ let m;const modern=/\b(B0[A-Z0-9]{8})\b/gi;while((m=modern.exec(text))!==null)add(m[1]);
+ render(found);
 }
-function render(){
- if(!data.length){$('products').innerHTML='<div class="muted">Tidak ada ASIN yang ditemukan.</div>';return}
- $('products').innerHTML='<div style="overflow:auto"><table><thead><tr><th>#</th><th>ASIN</th><th>Nama</th><th>Harga</th><th>Affiliate</th></tr></thead><tbody>'+
- data.map((a,i)=>{let tag=localStorage.getItem('amazonTag')||$('tag').value.trim();let link=tag?'https://www.amazon.de/dp/'+encodeURIComponent(a)+'/?tag='+encodeURIComponent(tag):'';return `<tr><td>${i+1}</td><td><span class="badge">${a}</span></td><td><input id="name${i}" placeholder="Nama produk"></td><td><input id="price${i}" placeholder="€39,99"></td><td class="url">${link||'Simpan Tracking ID'}</td></tr>`}).join('')+
- '</tbody></table></div>';
+function render(list){
+ document.getElementById('result').value=list.join('\n');
+ document.getElementById('stats').innerHTML='<span class="stat"><b>'+list.length+'</b> ASIN unik</span>'+(list.length?'<span class="stat ok">Siap dipakai</span>':'');
+ if(!list.length){document.getElementById('tableWrap').innerHTML='<span class="warn">Tidak menemukan ASIN.</span>';return}
+ let h='<table><thead><tr><th>#</th><th>ASIN</th><th>Amazon.de</th></tr></thead><tbody>';
+ list.forEach((a,i)=>h+='<tr><td>'+(i+1)+'</td><td><b>'+a+'</b></td><td><a target="_blank" href="https://www.amazon.de/dp/'+a+'">Buka</a></td></tr>');
+ document.getElementById('tableWrap').innerHTML=h+'</tbody></table>';
+ const tag=tagEl.value.trim();document.getElementById('linkPreview').textContent=tag?'Contoh: https://www.amazon.de/dp/'+list[0]+'/?tag='+encodeURIComponent(tag):'Masukkan Tracking ID untuk affiliate link.';
 }
-function affiliate(a){let tag=$('tag').value.trim()||localStorage.getItem('amazonTag')||'';return tag?'https://www.amazon.de/dp/'+encodeURIComponent(a)+'/?tag='+encodeURIComponent(tag):''}
-function esc(s){return String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;')}
-function generate(){
- if(!data.length){alert('Masukkan URL/ASIN terlebih dahulu.');return}
- let tag=$('tag').value.trim()||localStorage.getItem('amazonTag')||'';
- if(!tag){alert('Masukkan Tracking ID Amazon.de terlebih dahulu.');return}
- localStorage.setItem('amazonTag',tag);
- let html=data.map((a,i)=>{let n=$('name'+i)?.value||'Produkt '+a,p=$('price'+i)?.value||'Preis prüfen',link=affiliate(a);
- return `<article>
-<h2>${esc(n)}</h2>
-<p>Hier findest du eine kurze Produktbeschreibung für <strong>${esc(n)}</strong>. In einer späteren API-Version können offizielle Produktdaten automatisch ergänzt werden.</p>
-<h3>Vorteile</h3>
-<ul><li>Praktisch und vielseitig</li><li>Geeignet für den täglichen Gebrauch</li><li>Interessante Produktoption</li></ul>
-<p><strong>Preis:</strong> ${esc(p)}</p>
-<p><a href="${link}">Zum Produkt auf Amazon</a></p>
-</article>`}).join('\\n\\n');
- $('preview').textContent=html;
-}
-async function copyHtml(){if($('preview').textContent==='Belum ada hasil.')generate();let t=$('preview').textContent;await navigator.clipboard.writeText(t);alert('HTML berhasil disalin.')}
-function downloadHtml(){if($('preview').textContent==='Belum ada hasil.')generate();let blob=new Blob([$('preview').textContent],{type:'text/html;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='amazon-blogger.html';a.click();URL.revokeObjectURL(a.href)}
-function copyCsv(){
- if(!data.length){alert('Belum ada ASIN.');return}
- let rows=[['ASIN','Nama Produk','Harga','Affiliate Link'],...data.map((a,i)=>[$('name'+i)?.value||'', $('name'+i)?.value||'', $('price'+i)?.value||'', affiliate(a)])];
- let csv=rows.map(r=>r.map(x=>'"'+String(x).replaceAll('"','""')+'"').join(',')).join('\\n');
- navigator.clipboard.writeText(csv);alert('CSV berhasil disalin.');
-}
-function clearAll(){data=[];$('input').value='';$('count').textContent='Belum ada ASIN.';$('products').innerHTML='<div class="muted">Masukkan data terlebih dahulu.</div>';$('preview').textContent='Belum ada hasil.'}
-load();
+function list(){return document.getElementById('result').value.split(/\s+/).filter(Boolean)}
+async function copyASINs(){await navigator.clipboard.writeText(list().join('\n'));alert('ASIN sudah disalin.')}
+async function copyLinks(){const t=tagEl.value.trim();if(!t){alert('Masukkan Tracking ID dulu.');return}await navigator.clipboard.writeText(list().map(a=>'https://www.amazon.de/dp/'+a+'/?tag='+t).join('\n'));alert('Affiliate links sudah disalin.')}
+function downloadCSV(){const t=tagEl.value.trim(),rows=[['No','ASIN','Amazon.de URL','Affiliate URL']];list().forEach((a,i)=>rows.push([i+1,a,'https://www.amazon.de/dp/'+a,t?'https://www.amazon.de/dp/'+a+'/?tag='+t:'']));const csv=rows.map(r=>r.map(x=>'"'+String(x).replaceAll('"','""')+'"').join(',')).join('\n');const b=new Blob([csv],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='amazon-asin-v4.csv';a.click()}
+function saveTag(){localStorage.setItem('amazonTagV4',tagEl.value.trim());render(list());alert('Tracking ID disimpan.')}
+function clearAll(){document.getElementById('source').value='';render([])} render([]);
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
 </script></body></html>

@@ -1,1 +1,8 @@
-{"name":"Amazon Content Tool V3","short_name":"Amazon Tool","start_url":"./","display":"standalone","background_color":"#f7f5fa","theme_color":"#6750A4","icons":[]}
+{
+  "name": "Amazon ASIN Filter V4",
+  "short_name": "ASIN Filter V4",
+  "start_url": "./?v=4",
+  "display": "standalone",
+  "background_color": "#f3f4f6",
+  "theme_color": "#111827"
+}
