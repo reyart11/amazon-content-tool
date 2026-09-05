@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#6750A4"><link rel="manifest" href="manifest.json">
+<title>Amazon Content Tool</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#f7f5fa;color:#222}
+main{max-width:760px;margin:auto;padding:20px}.card{background:white;border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 2px 10px #00000010}
+h1{font-size:25px;margin:4px 0}.muted{color:#666;font-size:14px}textarea,input{width:100%;padding:13px;border:1px solid #ccc;border-radius:12px;font:inherit}
+textarea{min-height:150px}button{border:0;border-radius:12px;padding:13px 16px;margin:7px 5px 0 0;font-weight:700;background:#6750A4;color:white}button.secondary{background:#eee;color:#333}
+.stat{font-size:22px;font-weight:800}.item{border-top:1px solid #eee;padding:14px 0}.tag{display:inline-block;background:#eee;border-radius:8px;padding:4px 8px;font-size:12px;margin-bottom:6px}
+pre{white-space:pre-wrap;word-break:break-word;background:#f5f5f5;padding:12px;border-radius:10px;font-size:12px}
+</style></head>
+<body><main>
+<div class="card"><h1>Amazon Content Tool</h1><div class="muted">Prototype PWA • ASIN → deskripsi → HTML Blogger</div></div>
+<div class="card"><h3>1. Masukkan ASIN</h3>
+<textarea id="asins" placeholder="Satu ASIN per baris"></textarea>
+<button onclick="importAsins()">IMPORT ASIN</button>
+<button class="secondary" onclick="clearAll()">RESET</button>
+<div id="count" class="muted" style="margin-top:10px">Belum ada ASIN.</div></div>
+<div class="card"><h3>2. Data produk</h3><div id="products"><div class="muted">Import ASIN terlebih dahulu.</div></div>
+<button onclick="generate()">GENERATE DESKRIPSI</button></div>
+<div class="card"><h3>3. Export Blogger</h3>
+<div class="muted">Prototype ini membuat HTML contoh. Data Amazon/AI belum tersambung.</div>
+<button onclick="copyHtml()">COPY HTML</button><button onclick="downloadHtml()" class="secondary">DOWNLOAD HTML</button>
+<pre id="preview">Belum ada hasil.</pre></div>
+</main>
+<script>
+let data=[];
+function importAsins(){
+ data=[...new Set(document.getElementById('asins').value.split(/\n|,|\s+/).map(x=>x.trim()).filter(x=>x))];
+ document.getElementById('count').textContent=data.length+' ASIN unik ditemukan.';
+ render();
+}
+function render(){
+ document.getElementById('products').innerHTML=data.length?data.map((a,i)=>`<div class="item"><span class="tag">${a}</span><input id="name${i}" placeholder="Nama produk"><input id="price${i}" placeholder="Harga, contoh: €39,99" style="margin-top:7px"><input id="link${i}" placeholder="Affiliate Link" style="margin-top:7px"></div>`).join(''):'<div class="muted">Import ASIN terlebih dahulu.</div>';
+}
+function generate(){
+ if(!data.length){alert('Masukkan ASIN terlebih dahulu.');return}
+ const esc=s=>String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+ let html=data.map((a,i)=>{
+  const n=document.getElementById('name'+i)?.value||'Produkt '+a;
+  const p=document.getElementById('price'+i)?.value||'Preis prüfen';
+  const l=document.getElementById('link'+i)?.value||'AFFILIATE-LINK';
+  return `<article>\n<h2>${esc(n)}</h2>\n<p>Hier findest du eine kurze Produktbeschreibung für <strong>${esc(n)}</strong>. In der späteren Version kann dieser Text automatisch mit Produktdaten und KI erstellt werden.</p>\n<h3>Vorteile</h3>\n<ul><li>Praktisch und vielseitig</li><li>Geeignet für den täglichen Gebrauch</li><li>Interessante Produktoption</li></ul>\n<p><strong>Preis:</strong> ${esc(p)}</p>\n<p><a href="${esc(l)}">Zum Produkt auf Amazon</a></p>\n</article>`;
+ }).join('\n\n');
+ document.getElementById('preview').textContent=html;
+}
+async function copyHtml(){let t=document.getElementById('preview').textContent;if(!t||t==='Belum ada hasil.'){generate();t=document.getElementById('preview').textContent}await navigator.clipboard.writeText(t);alert('HTML berhasil disalin.')}
+function downloadHtml(){let t=document.getElementById('preview').textContent;if(!t||t==='Belum ada hasil.'){generate();t=document.getElementById('preview').textContent}let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/html'}));a.download='blogger-export.html';a.click()}
+function clearAll(){data=[];document.getElementById('asins').value='';document.getElementById('count').textContent='Belum ada ASIN.';render();document.getElementById('preview').textContent='Belum ada hasil.'}
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script></body></html>
